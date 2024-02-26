@@ -1,54 +1,50 @@
 import React, { useState, useEffect } from "react";
 
 const Card = () => {
-  const [timeCount, setTimeCount] = useState({
-    seconds: 0,
-    minutes: 0,
-    hours: 0,
-    days: 0,
-    weeks: 0,
-    months: 0,
-  });
+  const [digits, setDigits] = useState([
+    [0],
+    [0],
+    [0],
+    [0],
+    [0],
+    [0],
+  ]);
+  const [activeIndex, setActiveIndex] = useState(
+    digits.length - 1
+  );
+  const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const updatedTimeCount = { ...timeCount };
-      let carryOver = 1;
+      if (isFinished) return;
 
-      const deltaNames = [
-        "months",
-        "weeks",
-        "days",
-        "hours",
-        "minutes",
-        "seconds",
-      ];
+      setDigits((prevDigits) => {
+        const updatedDigits = [...prevDigits];
 
-      for (
-        let i = deltaNames.length - 1;
-        i >= 0;
-        i--
-      ) {
-        const delta = deltaNames[i];
-        const currentValue =
-          updatedTimeCount[delta] || 0;
-        const newValue =
-          (currentValue + carryOver) % 60; // Adjust for weeks and months as needed
-        carryOver = Math.floor(
-          (currentValue + carryOver) / 60
-        );
-        updatedTimeCount[delta] = newValue;
-      }
+        let currentValue =
+          updatedDigits[activeIndex][0];
+        currentValue++;
 
-      setTimeCount(updatedTimeCount);
-    }, 1000); // Update every second
+        if (currentValue === 10) {
+          currentValue = 0;
+          if (activeIndex > 0) {
+            setActiveIndex(activeIndex - 1);
+          } else {
+            setIsFinished(true);
+          }
+        }
+
+        updatedDigits[activeIndex][0] = currentValue;
+        return updatedDigits;
+      });
+    }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [timeCount]);
+  }, [digits, activeIndex, isFinished]);
 
   return (
     <div className='flexCenter text-white gap-3'>
-      <div className='flexCenter bg-slategray-600 p-4 rounded border-start border-end fs-1 fw-bold'>
+      <div className='flexCenter bg-slategray-600 p-4 rounded border-start fs-1 fw-bold'>
         <svg
           xmlns='http://www.w3.org/2000/svg'
           width='48'
@@ -61,16 +57,16 @@ const Card = () => {
           <path d='M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0' />
         </svg>
       </div>
-      {Object.entries(timeCount)
-        .reverse()
-        .map(([delta, value]) => (
-          <div
-            key={delta}
-            className='flexCenter bg-slategray-600 p-4 rounded border-start border-end fs-1 fw-bold'
-          >
-            {value}
-          </div>
-        ))}
+      {digits.map((digitArray, index) => (
+        <div
+          key={index}
+          className={`flexCenter bg-slategray-600 p-4 rounded border-start border-end fs-1 fw-bold ${
+            index === activeIndex ? "active" : ""
+          }`}
+        >
+          {digitArray[0]}
+        </div>
+      ))}
     </div>
   );
 };
